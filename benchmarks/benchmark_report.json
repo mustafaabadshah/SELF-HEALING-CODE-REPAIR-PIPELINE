@@ -1,0 +1,136 @@
+{
+  "timestamp": "2026-10-07T12:05:07Z",
+  "mode": "mock",
+  "summary": {
+    "total_tasks": 12,
+    "final_success_rate": 8.3,
+    "first_attempt_success_rate": 8.3,
+    "regression_detection_rate": 0.0,
+    "escalation_rate": 91.7,
+    "average_attempts": 2.83,
+    "average_latency_ms": 33073.7,
+    "average_tokens": 2158.0
+  },
+  "tasks": [
+    {
+      "task": "01_arithmetic_tax",
+      "repair_id": "rep_c11db7f660",
+      "status": "SUCCESS",
+      "attempts": 1,
+      "first_attempt_success": true,
+      "regressions_detected": 0,
+      "duration_ms": 11310,
+      "tokens": 810
+    },
+    {
+      "task": "02_type_converter",
+      "repair_id": "rep_65c0c316cb",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 32652,
+      "tokens": 2280
+    },
+    {
+      "task": "03_boundary_binary_search",
+      "repair_id": "rep_0c0bfbd9b0",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 31602,
+      "tokens": 2280
+    },
+    {
+      "task": "04_none_user_profile",
+      "repair_id": "rep_6c3ed3d0b6",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 26462,
+      "tokens": 2280
+    },
+    {
+      "task": "05_list_sliding_window",
+      "repair_id": "rep_8a8622c5d2",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 27755,
+      "tokens": 2280
+    },
+    {
+      "task": "06_api_pagination",
+      "repair_id": "rep_8ca5291981",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 43300,
+      "tokens": 2280
+    },
+    {
+      "task": "07_custom_sort_priority",
+      "repair_id": "rep_94e5386f50",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 69612,
+      "tokens": 2280
+    },
+    {
+      "task": "08_string_slugify",
+      "repair_id": "rep_5669cab785",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 34106,
+      "tokens": 2280
+    },
+    {
+      "task": "09_discount_regression",
+      "repair_id": "rep_692bbfee4e",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 30608,
+      "tokens": 2280
+    },
+    {
+      "task": "10_retry_exception_handler",
+      "repair_id": "rep_eb420ea91a",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 30802,
+      "tokens": 2280
+    },
+    {
+      "task": "11_date_range_overlap",
+      "repair_id": "rep_ddc46525fb",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 29180,
+      "tokens": 2280
+    },
+    {
+      "task": "12_token_bucket_rate_limiter",
+      "repair_id": "rep_b1df38add0",
+      "status": "HUMAN_REVIEW",
+      "attempts": 3,
+      "first_attempt_success": false,
+      "regressions_detected": 0,
+      "duration_ms": 29495,
+      "tokens": 2280
+    }
+  ]
+}
