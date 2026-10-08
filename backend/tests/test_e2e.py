@@ -56,6 +56,22 @@ async def test_end_to_end_regression_self_healing():
     assert attempts[1].regression_passed is True
     assert attempts[1].critic_verdict == "PASS"
 
+    # Verify detailed test runs and stdout capture
+    assert len(attempts[0].test_runs) >= 2
+    att1_target_run = next(tr for tr in attempts[0].test_runs if tr.type == "TARGET")
+    att1_reg_run = next(tr for tr in attempts[0].test_runs if tr.type == "REGRESSION")
+    assert att1_target_run.passed is True
+    assert "PASSED" in att1_target_run.stdout
+    assert att1_reg_run.passed is False
+    assert "FAILED" in att1_reg_run.stdout
+
+    assert len(attempts[1].test_runs) >= 2
+    att2_target_run = next(tr for tr in attempts[1].test_runs if tr.type == "TARGET")
+    att2_reg_run = next(tr for tr in attempts[1].test_runs if tr.type == "REGRESSION")
+    assert att2_target_run.passed is True
+    assert att2_reg_run.passed is True
+    assert "PASSED" in att2_reg_run.stdout
+
     # Final diff must be non-empty
     assert repair.final_diff is not None
     assert len(repair.final_diff) > 0

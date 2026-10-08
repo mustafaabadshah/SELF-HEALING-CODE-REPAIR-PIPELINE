@@ -154,15 +154,20 @@ class RepairService:
                         db.add(attempt_model)
 
                         # Add test run records
+                        t_res = att.get("target_test_result", {})
+                        r_res = att.get("regression_result", {})
+
                         t_run = TestRunModel(
                             id=f"tr_{uuid.uuid4().hex[:10]}",
                             repair_id=repair_id,
                             attempt_id=att_id,
                             type="TARGET",
                             passed=att.get("target_test_passed", False),
-                            exit_code=0 if att.get("target_test_passed") else 1,
-                            duration_ms=att.get("latency_ms", 0) // 2,
-                            failure_type="NONE" if att.get("target_test_passed") else "TEST_FAILURE",
+                            exit_code=t_res.get("exit_code", 0 if att.get("target_test_passed") else 1),
+                            duration_ms=t_res.get("duration_ms", att.get("latency_ms", 0) // 2),
+                            stdout=t_res.get("stdout", ""),
+                            stderr=t_res.get("stderr", ""),
+                            failure_type=t_res.get("failure_type", "NONE" if att.get("target_test_passed") else "TEST_FAILURE"),
                         )
                         r_run = TestRunModel(
                             id=f"tr_{uuid.uuid4().hex[:10]}",
@@ -170,9 +175,11 @@ class RepairService:
                             attempt_id=att_id,
                             type="REGRESSION",
                             passed=att.get("regression_passed", False),
-                            exit_code=0 if att.get("regression_passed") else 1,
-                            duration_ms=att.get("latency_ms", 0) // 2,
-                            failure_type="NONE" if att.get("regression_passed") else "REGRESSION",
+                            exit_code=r_res.get("exit_code", 0 if att.get("regression_passed") else 1),
+                            duration_ms=r_res.get("duration_ms", att.get("latency_ms", 0) // 2),
+                            stdout=r_res.get("stdout", ""),
+                            stderr=r_res.get("stderr", ""),
+                            failure_type=r_res.get("failure_type", "NONE" if att.get("regression_passed") else "REGRESSION"),
                         )
                         db.add(t_run)
                         db.add(r_run)

@@ -54,6 +54,33 @@ class EventBus:
                 except Exception as e:
                     logger.warning(f"Error publishing to subscriber queue: {e}")
 
+    def publish_sync(self, repair_id: str, event_type: str, payload: Dict[str, Any]) -> None:
+        """Synchronously record and dispatch an event from worker threads or sync nodes."""
+        event = {
+            "repair_id": repair_id,
+            "event_type": event_type,
+            "payload": payload,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+        if repair_id not in self._history:
+            self._history[repair_id] = []
+        self._history[repair_id].append(event)
+
+        logger.info(f"[{repair_id}] Event (sync): {event_type}")
+
+        if repair_id in self._subscribers:
+            for q in list(self._subscribers[repair_id]):
+                try:
+                    q.put_nowait(event)
+                except Exception:
+                    try:
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            loop.call_soon_threadsafe(q.put_nowait, event)
+                    except Exception as e:
+                        logger.warning(f"Error publishing sync to subscriber queue: {e}")
+
     def get_history(self, repair_id: str) -> List[Dict[str, Any]]:
         return list(self._history.get(repair_id, []))
 

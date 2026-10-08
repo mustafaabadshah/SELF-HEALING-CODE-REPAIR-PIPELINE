@@ -38,6 +38,12 @@ export async function getRepairDiff(id: string): Promise<DiffResponse> {
   return res.json();
 }
 
+export async function getRepairTests(id: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/repairs/${id}/tests`);
+  if (!res.ok) throw new Error('Failed to fetch repair test runs');
+  return res.json();
+}
+
 export async function getMetrics(): Promise<DashboardMetrics> {
   const res = await fetch(`${API_BASE}/metrics`);
   if (!res.ok) throw new Error('Failed to fetch metrics');

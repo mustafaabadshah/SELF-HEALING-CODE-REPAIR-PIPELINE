@@ -250,8 +250,13 @@ export const LiveRepair: React.FC = () => {
         filename={repair.source_file}
       />
 
-      {/* Test Results */}
+      {/* Test Results and Diagnostic Console */}
       <TestResultsPanel
+        targetTestSpec={repair.target_test}
+        testFile={repair.test_file}
+        attempts={repair.attempts}
+        currentAttempt={repair.current_attempt}
+        status={repair.status}
         targetResult={{
           passed: latestAttempt?.target_passed,
           duration_ms: (latestAttempt?.latency_ms || 0) / 2,

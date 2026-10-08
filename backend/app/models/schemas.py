@@ -25,6 +25,18 @@ class CreateRepairResponse(BaseModel):
     message: str
 
 
+class TestRunSummary(BaseModel):
+    id: str
+    type: str
+    passed: bool
+    exit_code: int = 0
+    duration_ms: int = 0
+    stdout: str = ""
+    stderr: str = ""
+    failure_type: str = ""
+    created_at: Optional[datetime] = None
+
+
 class AttemptSummary(BaseModel):
     id: str
     attempt_number: int
@@ -40,18 +52,7 @@ class AttemptSummary(BaseModel):
     input_tokens: int = 0
     output_tokens: int = 0
     created_at: datetime
-
-
-class TestRunSummary(BaseModel):
-    id: str
-    type: str
-    passed: bool
-    exit_code: int
-    duration_ms: int
-    stdout: str
-    stderr: str
-    failure_type: str
-    created_at: datetime
+    test_runs: List[TestRunSummary] = Field(default_factory=list)
 
 
 class RepairDetailResponse(BaseModel):

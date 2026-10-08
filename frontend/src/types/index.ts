@@ -8,6 +8,18 @@ export type RepairStatus =
 
 export type CriticVerdict = 'PASS' | 'REVISE' | 'ESCALATE';
 
+export interface TestRunSummary {
+  id: string;
+  type: 'TARGET' | 'REGRESSION';
+  passed: boolean;
+  exit_code: number;
+  duration_ms: number;
+  stdout: string;
+  stderr: string;
+  failure_type: string;
+  created_at?: string;
+}
+
 export interface AttemptSummary {
   id: string;
   attempt_number: number;
@@ -23,6 +35,7 @@ export interface AttemptSummary {
   input_tokens: number;
   output_tokens: number;
   created_at: string;
+  test_runs?: TestRunSummary[];
 }
 
 export interface RepairDetail {

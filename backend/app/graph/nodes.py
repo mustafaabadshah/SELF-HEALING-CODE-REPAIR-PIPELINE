@@ -70,6 +70,21 @@ def analyze_failure_node(state: RepairState) -> Dict[str, Any]:
     failure_type = initial_target_res.get("failure_type", "TEST_FAILURE")
     root_cause = initial_target_res.get("error_summary", "Baseline test failure")
 
+    event_bus.publish_sync(
+        task_id,
+        "test.baseline_completed",
+        {
+            "test_path": state["target_test"],
+            "passed": initial_target_res.get("passed", False),
+            "exit_code": initial_target_res.get("exit_code", 1),
+            "duration_ms": initial_target_res.get("duration_ms", 0),
+            "stdout": initial_target_res.get("stdout", ""),
+            "stderr": initial_target_res.get("stderr", ""),
+            "failure_type": failure_type,
+            "root_cause": root_cause,
+        },
+    )
+
     return {
         "target_test_result": initial_target_res,
         "failure_type": failure_type,
@@ -139,7 +154,8 @@ def execute_tool_calls_node(state: RepairState) -> Dict[str, Any]:
 
 def target_test_node(state: RepairState) -> Dict[str, Any]:
     task_id = state["task_id"]
-    logger.info(f"[{task_id}] Node: target_test")
+    attempt = state["attempt"]
+    logger.info(f"[{task_id}] Node: target_test (attempt {attempt})")
 
     executor = ToolExecutor(
         workspace_path=state["workspace_path"],
@@ -148,16 +164,33 @@ def target_test_node(state: RepairState) -> Dict[str, Any]:
     )
 
     target_res = executor.execute("run_target_test", {"test_path": state["target_test"]})
+    failure_type = target_res.get("failure_type", "NONE" if target_res.get("passed") else "TEST_FAILURE")
+
+    event_bus.publish_sync(
+        task_id,
+        "test.target_completed",
+        {
+            "attempt": attempt,
+            "test_path": state["target_test"],
+            "passed": target_res.get("passed", False),
+            "exit_code": target_res.get("exit_code", 0),
+            "duration_ms": target_res.get("duration_ms", 0),
+            "stdout": target_res.get("stdout", ""),
+            "stderr": target_res.get("stderr", ""),
+            "failure_type": failure_type,
+        },
+    )
 
     return {
         "target_test_result": target_res,
-        "failure_type": target_res.get("failure_type", "NONE" if target_res.get("passed") else "TEST_FAILURE"),
+        "failure_type": failure_type,
     }
 
 
 def regression_test_node(state: RepairState) -> Dict[str, Any]:
     task_id = state["task_id"]
-    logger.info(f"[{task_id}] Node: regression_test")
+    attempt = state["attempt"]
+    logger.info(f"[{task_id}] Node: regression_test (attempt {attempt})")
 
     executor = ToolExecutor(
         workspace_path=state["workspace_path"],
@@ -166,6 +199,23 @@ def regression_test_node(state: RepairState) -> Dict[str, Any]:
     )
 
     reg_res = executor.execute("run_regression_tests", {})
+
+    event_bus.publish_sync(
+        task_id,
+        "test.regression_completed",
+        {
+            "attempt": attempt,
+            "passed": reg_res.get("passed", False),
+            "total": reg_res.get("total", 0),
+            "passed_tests": reg_res.get("passed_tests", 0),
+            "failed_tests": reg_res.get("failed_tests", 0),
+            "failed_names": reg_res.get("failed_names", []),
+            "duration_ms": reg_res.get("duration_ms", 0),
+            "stdout": reg_res.get("stdout", ""),
+            "stderr": reg_res.get("stderr", ""),
+            "exit_code": reg_res.get("exit_code", 0),
+        },
+    )
 
     return {
         "regression_result": reg_res,
@@ -182,16 +232,19 @@ def critic_node(state: RepairState) -> Dict[str, Any]:
     res = critic.run(state)
     duration_ms = int((time.time() - start_t) * 1000)
 
-    # Record this attempt in shared working memory
+    # Record this attempt in shared working memory with full test runs
     attempt_record = {
         "attempt": attempt,
         "hypothesis": state.get("coder_summary", ""),
         "coder_plan": state.get("coder_plan", ""),
         "diff": state.get("current_diff", ""),
         "target_test_passed": state.get("target_test_result", {}).get("passed", False),
+        "target_test_result": state.get("target_test_result", {}),
         "regression_passed": state.get("regression_result", {}).get("passed", False),
+        "regression_result": state.get("regression_result", {}),
         "critic_verdict": res.get("verdict", "REVISE"),
         "critic_analysis": res.get("analysis", ""),
+        "critic_confidence": res.get("confidence", 0.9),
         "failure_type": state.get("failure_type", ""),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "latency_ms": duration_ms,
@@ -201,6 +254,19 @@ def critic_node(state: RepairState) -> Dict[str, Any]:
 
     current_attempts = list(state.get("attempts", []))
     current_attempts.append(attempt_record)
+
+    event_bus.publish_sync(
+        task_id,
+        "critic.evaluated",
+        {
+            "attempt": attempt,
+            "verdict": res.get("verdict", "REVISE"),
+            "confidence": res.get("confidence", 0.9),
+            "analysis": res.get("analysis", ""),
+            "target_passed": attempt_record["target_test_passed"],
+            "regression_passed": attempt_record["regression_passed"],
+        },
+    )
 
     return {
         "critic_verdict": res.get("verdict", "REVISE"),

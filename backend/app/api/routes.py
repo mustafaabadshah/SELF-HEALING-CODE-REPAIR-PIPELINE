@@ -9,6 +9,7 @@ from backend.app.models.schemas import (
     CreateRepairResponse,
     RepairDetailResponse,
     AttemptSummary,
+    TestRunSummary,
     DiffResponse,
     TraceResponse,
     EscalationDecisionRequest,
@@ -24,6 +25,39 @@ from backend.app.services.event_bus import event_bus
 from backend.app.api.websocket import handle_repair_websocket
 
 router = APIRouter(prefix="/api")
+
+
+def _serialize_attempt(a) -> AttemptSummary:
+    return AttemptSummary(
+        id=a.id,
+        attempt_number=a.attempt_number,
+        hypothesis=a.hypothesis,
+        diff=a.diff,
+        target_passed=a.target_passed,
+        regression_passed=a.regression_passed,
+        critic_verdict=a.critic_verdict,
+        critic_analysis=a.critic_analysis,
+        critic_confidence=a.critic_confidence,
+        failure_type=a.failure_type,
+        latency_ms=a.latency_ms,
+        input_tokens=a.input_tokens,
+        output_tokens=a.output_tokens,
+        created_at=a.created_at,
+        test_runs=[
+            TestRunSummary(
+                id=tr.id,
+                type=tr.type,
+                passed=tr.passed,
+                exit_code=tr.exit_code,
+                duration_ms=tr.duration_ms,
+                stdout=tr.stdout or "",
+                stderr=tr.stderr or "",
+                failure_type=tr.failure_type or "",
+                created_at=tr.created_at,
+            )
+            for tr in (a.test_runs or [])
+        ],
+    )
 
 
 @router.post("/repairs", response_model=CreateRepairResponse)
@@ -44,25 +78,7 @@ async def list_repairs(limit: int = Query(50, ge=1, le=100)):
     records = await RepairService.list_repairs(limit=limit)
     response = []
     for r in records:
-        attempts = [
-            AttemptSummary(
-                id=a.id,
-                attempt_number=a.attempt_number,
-                hypothesis=a.hypothesis,
-                diff=a.diff,
-                target_passed=a.target_passed,
-                regression_passed=a.regression_passed,
-                critic_verdict=a.critic_verdict,
-                critic_analysis=a.critic_analysis,
-                critic_confidence=a.critic_confidence,
-                failure_type=a.failure_type,
-                latency_ms=a.latency_ms,
-                input_tokens=a.input_tokens,
-                output_tokens=a.output_tokens,
-                created_at=a.created_at,
-            )
-            for a in (r.attempts or [])
-        ]
+        attempts = [_serialize_attempt(a) for a in (r.attempts or [])]
         response.append(
             RepairDetailResponse(
                 id=r.id,
@@ -90,25 +106,7 @@ async def get_repair(repair_id: str):
     if not record:
         raise HTTPException(status_code=404, detail="Repair record not found")
 
-    attempts = [
-        AttemptSummary(
-            id=a.id,
-            attempt_number=a.attempt_number,
-            hypothesis=a.hypothesis,
-            diff=a.diff,
-            target_passed=a.target_passed,
-            regression_passed=a.regression_passed,
-            critic_verdict=a.critic_verdict,
-            critic_analysis=a.critic_analysis,
-            critic_confidence=a.critic_confidence,
-            failure_type=a.failure_type,
-            latency_ms=a.latency_ms,
-            input_tokens=a.input_tokens,
-            output_tokens=a.output_tokens,
-            created_at=a.created_at,
-        )
-        for a in (record.attempts or [])
-    ]
+    attempts = [_serialize_attempt(a) for a in (record.attempts or [])]
 
     return RepairDetailResponse(
         id=record.id,
@@ -161,25 +159,7 @@ async def get_repair_attempts(repair_id: str):
     if not record:
         raise HTTPException(status_code=404, detail="Repair record not found")
 
-    return [
-        AttemptSummary(
-            id=a.id,
-            attempt_number=a.attempt_number,
-            hypothesis=a.hypothesis,
-            diff=a.diff,
-            target_passed=a.target_passed,
-            regression_passed=a.regression_passed,
-            critic_verdict=a.critic_verdict,
-            critic_analysis=a.critic_analysis,
-            critic_confidence=a.critic_confidence,
-            failure_type=a.failure_type,
-            latency_ms=a.latency_ms,
-            input_tokens=a.input_tokens,
-            output_tokens=a.output_tokens,
-            created_at=a.created_at,
-        )
-        for a in (record.attempts or [])
-    ]
+    return [_serialize_attempt(a) for a in (record.attempts or [])]
 
 
 @router.get("/repairs/{repair_id}/diff", response_model=DiffResponse)
